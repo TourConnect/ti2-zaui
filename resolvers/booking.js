@@ -46,14 +46,27 @@ const resolvers = {
       currencyPrecision: R.path(['pricing', 'currencyPrecision'], root),
       currency: R.path(['pricing', 'currency'], root),
     }),
-    // TODO
-    cancelPolicy: R.path(['effective_cancellation_policy', 'type']),
+    cancelPolicy: root => {
+      const cancellationCutoff = R.pathOr('', ['option', 'cancellationCutoff'], root);
+      if (cancellationCutoff) return `Cancel before ${cancellationCutoff} of departure time.`;
+      return '';
+    },
     optionId: R.path(['optionId']),
     optionName: ({ option }) => option ? option.internalName : '',
     resellerReference: R.propOr('', 'resellerReference'),
     // TODO
     publicUrl: R.prop('confirmation_url'),
     privateUrl: R.prop('dashboard_url'),
+    pickupRequested: R.prop('pickupRequested'),
+    pickupPointId: R.prop('pickupPointId'),
+    pickupPoint: root => {
+      const pickupPoint = R.path(['pickupPoint'], root);
+      if (!pickupPoint) return null;
+      return {
+        ...pickupPoint,
+        postal: pickupPoint.postal_code,
+      };
+    },
   },
 };
 

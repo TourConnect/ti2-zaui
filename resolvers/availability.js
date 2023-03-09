@@ -35,6 +35,13 @@ const resolvers = {
     // get the starting price
     pricing: root => R.path(['pricing'], root) || R.path(['pricingFrom'], root),
     unitPricing: root => R.path(['unitPricing'], root) || R.path(['unitPricingFrom'], root),
+    pickupAvailable: R.prop('pickupAvailable'),
+    pickupRequired: R.prop('pickupRequired'),
+    pickupPoints: root => R.pathOr([], ['pickupPoints'], root)
+      .map(o => ({
+        ...o,
+        postal: o.postal_code,
+      })),
   },
   Pricing: {
     unitId: R.prop('unitId'),

@@ -18,14 +18,6 @@ if (process.env.debug) {
   curlirize(axiosRaw);
 }
 
-const axios = async (...args) => {
-  return axiosRaw(...args)
-  .catch(err => {
-    const errMsg = R.path(['response', 'data', 'error'], err);
-    throw errMsg || err;
-  });
-};
-
 const isNilOrEmpty = R.either(R.isNil, R.isEmpty);
 
 const getHeaders = ({
@@ -33,13 +25,42 @@ const getHeaders = ({
 }) => ({
   Authorization: `Bearer ${affiliateKey}`,
   'Content-Type': 'application/json',
-  'OCTO-Capabilities': 'octo/pricing'
+  'Octo-Capabilities': 'octo/pricing,octo/pickups,octo/cart',
 });
 
+
+const axiosSafeRequest = R.pick(['headers', 'method', 'url', 'data']);
+const axiosSafeResponse = response => {
+  const retVal = R.pick(['data', 'status', 'statusText', 'headers', 'request'], response);
+  retVal.request = axiosSafeRequest(retVal.request);
+  return retVal;
+};
 class Plugin {
   constructor(params) { // we get the env variables from here
     Object.entries(params).forEach(([attr, value]) => {
       this[attr] = value;
+    });
+    if (this.events) {
+      axiosRaw.interceptors.request.use(request => {
+        this.events.emit(`${this.name}.axios.request`, axiosSafeRequest(request));
+        return request;
+      });
+      axiosRaw.interceptors.response.use(response => {
+        this.events.emit(`${this.name}.axios.response`, axiosSafeResponse(response));
+        return response;
+      });
+    }
+    const pluginObj = this;
+    this.axios = async (...args) => axiosRaw(...args).catch(err => {
+      const errMsg = R.omit(['config'], err.toJSON());
+      console.log(`error in ${this.name}`, args[0], errMsg, err.response.data);
+      if (pluginObj.events) {
+        pluginObj.events.emit(`${this.name}.axios.error`, {
+          request: args[0],
+          err: errMsg,
+        });
+      }
+      throw R.pathOr(err, ['response', 'data', 'details'], err);
     });
     this.tokenTemplate = () => ({
       affiliateKey: {
@@ -65,7 +86,7 @@ class Plugin {
       affiliateKey,
     });
     try {
-      const suppliers = R.path(['data'], await axios({
+      const suppliers = R.path(['data'], await this.axios({
         method: 'get',
         url,
         headers,
@@ -96,7 +117,7 @@ class Plugin {
     const headers = getHeaders({
       affiliateKey,
     });
-    let results = R.pathOr([], ['data'], await axios({
+    let results = R.pathOr([], ['data'], await this.axios({
       method: 'get',
       url,
       headers,
@@ -187,13 +208,13 @@ class Plugin {
         if (currency) data.currency = currency;
         // not sending units, zaui only returns pricing and capacity for the units requested
         // we will do some match and filtering later
-        const availWithoutUnits = R.path(['data'], await axios({
+        const availWithoutUnits = R.path(['data'], await this.axios({
           method: 'post',
           url,
           data: R.omit(['units'], data),
           headers,
         }));
-        const availWithUnits = R.path(['data'], await axios({
+        const availWithUnits = R.path(['data'], await this.axios({
           method: 'post',
           url,
           data,
@@ -211,18 +232,11 @@ class Plugin {
     );
     availability = await Promise.map(availability,
       (avails, ix) => {
-        let totalQuantity = 0;
-        units[ix].forEach(unit => {
-          totalQuantity += unit.quantity;
-        });
         return Promise.map(avails,
           avail => translateAvailability({
             typeDefs: availTypeDefs,
             query: availQuery,
-            rootValue: {
-              ...avail,
-              totalQuantity,
-            },
+            rootValue: avail,
             variableValues: {
               productId: productIds[ix],
               optionId: optionIds[ix],
@@ -284,14 +298,14 @@ class Plugin {
           units: units[ix].map(u => ({ id: u.unitId, quantity: u.quantity })),
         };
         if (currency) data.currency = currency;
-        const result = await axios({
+        const result = await this.axios({
           method: 'post',
           url,
           data,
           headers,
         });
         return Promise.map(result.data, avail => translateAvailability({
-          rootValue: { ...avail, totalQuantity: 1 },
+          rootValue: avail,
           typeDefs: availTypeDefs,
           query: availQuery,
         }))
@@ -305,7 +319,6 @@ class Plugin {
       affiliateKey,
       supplierId,
     },
-    token,
     payload: {
       availabilityKey,
       holder,
@@ -313,7 +326,6 @@ class Plugin {
       reference,
       settlementMethod,
     },
-    typeDefsAndQueries,
     typeDefsAndQueries: {
       bookingTypeDefs,
       bookingQuery,
@@ -327,11 +339,11 @@ class Plugin {
     });
     const urlForCreateBooking = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings`;
     const dataFromAvailKey = await jwt.verify(availabilityKey, this.jwtKey);
-    let booking = R.path(['data'], await axios({
+    let booking = R.path(['data'], await this.axios({
       method: 'post',
       url: urlForCreateBooking,
       data: {
-        settlementMethod,
+        settlementMethod, 
         ...dataFromAvailKey,
         notes,
       },
@@ -341,34 +353,23 @@ class Plugin {
       contact: {
         fullName: `${holder.name} ${holder.surname}`,
         emailAddress: R.path(['emailAddress'], holder),
-        phoneNumber: R.path(['phoneNumber'], holder),
-        locales: R.path(['locales'], holder),
-        country: R.path(['country'], holder),
+        phoneNumber: R.pathOr('', ['phoneNumber'], holder),
+        locales: R.pathOr(null, ['locales'], holder),
+        country: R.pathOr('', ['country'], holder),
       },
       notes,
       resellerReference: reference,
       settlementMethod,
     };
-    booking = R.path(['data'], await axios({
+    booking = R.path(['data'], await this.axios({
       method: 'post',
       url: `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings/${booking.uuid}/confirm`,
       data: dataForConfirmBooking,
       headers,
     }));
-    const { products: [product] } = R.path(['data'], await this.searchProducts({
-      typeDefsAndQueries,
-      token,
-      payload: {
-        productId: dataFromAvailKey.productId,
-      }
-    }))
-    console.log(booking, product);
     return ({
       booking: await translateBooking({
-        rootValue: {
-          ...booking,
-          option: product.options.find(o => o.id === dataFromAvailKey.optionId),
-        },
+        rootValue: booking,
         typeDefs: bookingTypeDefs,
         query: bookingQuery,
       })
@@ -397,25 +398,15 @@ class Plugin {
       affiliateKey,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings/${bookingId || id}/cancel`;
-    const booking = R.path(['data'], await axios({
+    const booking = R.path(['data'], await this.axios({
       method: 'delete',
       url,
       data: { reason },
       headers,
     }));
-    const { products: [product] } = R.path(['data'], await this.searchProducts({
-      typeDefsAndQueries,
-      token,
-      payload: {
-        productId: booking.productId,
-      }
-    }))
     return ({
       cancellation: await translateBooking({
-        rootValue: {
-          ...booking,
-          option: product.options.find(o => o.id === booking.optionId),
-        },
+        rootValue: booking,
         typeDefs: bookingTypeDefs,
         query: bookingQuery,
       })
@@ -439,13 +430,7 @@ class Plugin {
       bookingTypeDefs,
       bookingQuery,
     },
-    typeDefsAndQueries,
-    token,
   }) {
-    // TODO: zaui doesn't have this capability
-    return {
-      bookings: [],
-    };
     assert(
       !isNilOrEmpty(bookingId)
       || !isNilOrEmpty(resellerReference)
@@ -460,7 +445,7 @@ class Plugin {
     });
     const searchByUrl = async url => {
       try {
-        return R.path(['data'], await axios({
+        return R.path(['data'], await this.axios({
           method: 'get',
           url,
           headers,
@@ -480,7 +465,7 @@ class Plugin {
       }
       if (!isNilOrEmpty(resellerReference)) {
         url = `${endpoint || this.endpoint}/${supplierId}/bookings?resellerReference=${resellerReference}`;
-        return R.path(['data'], await axios({
+        return R.path(['data'], await this.axios({
           method: 'get',
           url,
           headers,
@@ -488,7 +473,7 @@ class Plugin {
       }
       if (!isNilOrEmpty(supplierBookingId)) {
         url = `${endpoint || this.endpoint}/${supplierId}/bookings?supplierReference=${supplierBookingId}`;
-        return R.path(['data'], await axios({
+        return R.path(['data'], await this.axios({
           method: 'get',
           url,
           headers,
@@ -498,7 +483,7 @@ class Plugin {
         const localDateStart = moment(travelDateStart, dateFormat).format();
         const localDateEnd = moment(travelDateEnd, dateFormat).format();
         url = `${endpoint || this.endpoint}/${supplierId}/bookings?localDateStart=${encodeURIComponent(localDateStart)}&localDateEnd=${encodeURIComponent(localDateEnd)}`;
-        return R.path(['data'], await axios({
+        return R.path(['data'], await this.axios({
           method: 'get',
           url,
           headers,
@@ -508,18 +493,8 @@ class Plugin {
     })();
     return ({
       bookings: await Promise.map(R.unnest(bookings), async booking => {
-        const { products: [product] } = R.path(['data'], await this.searchProducts({
-          typeDefsAndQueries,
-          token,
-          payload: {
-            productId: booking.productId,
-          }
-        }));
         return translateBooking({
-          rootValue: {
-            ...booking,
-            option: product.options.find(o => o.id === booking.optionId),
-          },
+          rootValue: booking,
           typeDefs: bookingTypeDefs,
           query: bookingQuery,
         });
