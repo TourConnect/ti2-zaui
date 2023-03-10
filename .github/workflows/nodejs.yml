@@ -20,7 +20,7 @@ jobs:
       - run: npm test
         env:
           ti2_zaui_endpoint: 'https://api.zaui.io/api/'
-          ti2_zaui_appKey: ${{ secrets.ZAUI_APIKEY }}
+          ti2_zaui_apiKey: ${{ secrets.ZAUI_APIKEY }}
           ti2_zaui_supplierId: '200'
           ti2_zaui_jwtKey: 'Reliance-Overload4-Lyrics'
   tag:
