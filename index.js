@@ -390,8 +390,6 @@ class Plugin {
       bookingTypeDefs,
       bookingQuery,
     },
-    typeDefsAndQueries,
-    token,
   }) {
     assert(!isNilOrEmpty(bookingId) || !isNilOrEmpty(id), 'Invalid booking id');
     const headers = getHeaders({
@@ -420,8 +418,6 @@ class Plugin {
     },
     payload: {
       bookingId,
-      resellerReference,
-      supplierBookingId,
       travelDateStart,
       travelDateEnd,
       dateFormat,
@@ -433,8 +429,6 @@ class Plugin {
   }) {
     assert(
       !isNilOrEmpty(bookingId)
-      || !isNilOrEmpty(resellerReference)
-      || !isNilOrEmpty(supplierBookingId)
       || !(
         isNilOrEmpty(travelDateStart) && isNilOrEmpty(travelDateEnd) && isNilOrEmpty(dateFormat)
       ),
@@ -463,26 +457,10 @@ class Plugin {
           searchByUrl(`${endpoint || this.endpoint}/suppliers/${supplierId}/bookings?supplierReference=${bookingId}`),
         ]);
       }
-      if (!isNilOrEmpty(resellerReference)) {
-        url = `${endpoint || this.endpoint}/${supplierId}/bookings?resellerReference=${resellerReference}`;
-        return R.path(['data'], await this.axios({
-          method: 'get',
-          url,
-          headers,
-        }));
-      }
-      if (!isNilOrEmpty(supplierBookingId)) {
-        url = `${endpoint || this.endpoint}/${supplierId}/bookings?supplierReference=${supplierBookingId}`;
-        return R.path(['data'], await this.axios({
-          method: 'get',
-          url,
-          headers,
-        }));
-      }
       if (!isNilOrEmpty(travelDateStart)) {
-        const localDateStart = moment(travelDateStart, dateFormat).format();
-        const localDateEnd = moment(travelDateEnd, dateFormat).format();
-        url = `${endpoint || this.endpoint}/${supplierId}/bookings?localDateStart=${encodeURIComponent(localDateStart)}&localDateEnd=${encodeURIComponent(localDateEnd)}`;
+        const localDateStart = moment(travelDateStart, dateFormat).format('YYYY-MM-DD');
+        const localDateEnd = moment(travelDateEnd, dateFormat).format('YYYY-MM-DD');
+        url = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings?localDateStart=${encodeURIComponent(localDateStart)}&localDateEnd=${encodeURIComponent(localDateEnd)}`;
         return R.path(['data'], await this.axios({
           method: 'get',
           url,

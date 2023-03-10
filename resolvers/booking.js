@@ -21,7 +21,10 @@ const resolvers = {
     status: e => capitalize(R.path(['status'], e)),
     productId: R.path(['product', 'id']),
     productName: R.path(['product', 'title']),
-    cancellable: R.path(['cancellable']),
+    cancellable: root => {
+      if (root.status === 'CANCELLED') return false;
+      return root.cancellable;
+    },
     editable: () => false,
     unitItems: ({ unitItems = [] }) => unitItems.map(unitItem => ({
       unitItemId: R.path(['uuid']),
