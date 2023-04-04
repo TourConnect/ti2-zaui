@@ -14,6 +14,7 @@ const { translateRate } = require('./resolvers/rate');
 const endpoint = 'https://api.zaui.io/octo';
 
 const CONCURRENCY = 3; // is this ok ?
+
 if (process.env.debug) {
   curlirize(axiosRaw);
 }
@@ -21,11 +22,13 @@ if (process.env.debug) {
 const isNilOrEmpty = R.either(R.isNil, R.isEmpty);
 
 const getHeaders = ({
-  affiliateKey,
+  apiKey,
+  resellerId,
 }) => ({
-  Authorization: `Bearer ${affiliateKey}`,
+  Authorization: `Bearer ${apiKey}`,
   'Content-Type': 'application/json',
-  'Octo-Capabilities': 'octo/pricing,octo/pickups,octo/cart',
+  'Octo-Capabilities': 'octo/pricing,octo/pickups,app/tourconnectai',
+  ...resellerId ? { onBehalfOf_resellerId: resellerId } : {},
 });
 
 
@@ -63,10 +66,15 @@ class Plugin {
       throw R.pathOr(err, ['response', 'data', 'details'], err);
     });
     this.tokenTemplate = () => ({
-      affiliateKey: {
+      apiKey: {
         type: 'text',
         regExp: /^[0-9a-z]{64}$/,
         description: 'the Api Key provided from Zaui, should be in uuid format',
+      },
+      resellerId: {
+        type: 'text',
+        regExp: /^[0-9a-z]{4}$/,
+        description: 'the Reseller Id provided from Ventrata, should be in uuid format',
       },
       supplierId: {
         type: 'text',
@@ -78,12 +86,12 @@ class Plugin {
 
   async validateToken({
     token: {
-      affiliateKey,
+      apiKey,
     },
   }) {
     const url = `${endpoint || this.endpoint}/suppliers/`;
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
     });
     try {
       const suppliers = R.path(['data'], await this.axios({
@@ -99,7 +107,7 @@ class Plugin {
 
   async searchProducts({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
     },
     payload,
@@ -115,7 +123,7 @@ class Plugin {
       }
     }
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
     });
     let results = R.pathOr([], ['data'], await this.axios({
       method: 'get',
@@ -149,7 +157,7 @@ class Plugin {
 
   async searchQuote({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
     },
     payload: {
@@ -162,7 +170,7 @@ class Plugin {
 
   async searchAvailability({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
     },
     payload: {
@@ -193,7 +201,7 @@ class Plugin {
     const localDateStart = moment(startDate, dateFormat).format('YYYY-MM-DD');
     const localDateEnd = moment(endDate, dateFormat).format('YYYY-MM-DD');
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/availability`;
     let availability = (
@@ -253,7 +261,7 @@ class Plugin {
 
   async availabilityCalendar({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
     },
     payload: {
@@ -284,7 +292,7 @@ class Plugin {
     const localDateStart = moment(startDate, dateFormat).format('YYYY-MM-DD');
     const localDateEnd = moment(endDate, dateFormat).format('YYYY-MM-DD');
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/availability`;
     const availability = (
@@ -316,8 +324,9 @@ class Plugin {
 
   async createBooking({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
+      resellerId,
     },
     payload: {
       availabilityKey,
@@ -335,7 +344,8 @@ class Plugin {
     assert(R.path(['name'], holder), 'a holder\' first name is required');
     assert(R.path(['surname'], holder), 'a holder\' surname is required');
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
+      resellerId,
     });
     const urlForCreateBooking = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings`;
     const dataFromAvailKey = await jwt.verify(availabilityKey, this.jwtKey);
@@ -378,7 +388,7 @@ class Plugin {
 
   async cancelBooking({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
     },
     payload: {
@@ -393,7 +403,7 @@ class Plugin {
   }) {
     assert(!isNilOrEmpty(bookingId) || !isNilOrEmpty(id), 'Invalid booking id');
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings/${bookingId || id}/cancel`;
     const booking = R.path(['data'], await this.axios({
@@ -413,7 +423,7 @@ class Plugin {
 
   async searchBooking({
     token: {
-      affiliateKey,
+      apiKey,
       supplierId,
     },
     payload: {
@@ -435,7 +445,7 @@ class Plugin {
       'at least one parameter is required',
     );
     const headers = getHeaders({
-      affiliateKey,
+      apiKey,
     });
     const searchByUrl = async url => {
       try {
