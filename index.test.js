@@ -35,7 +35,7 @@ describe('search tests', () => {
     productName: 'Vancouver Nights',
   };
   const token = {
-    affiliateKey: process.env.ti2_zaui_apiKey,
+    apiKey: process.env.ti2_zaui_apiKey,
     supplierId: process.env.ti2_zaui_supplierId,
   };
   const dateFormat = 'DD/MM/YYYY';
@@ -63,12 +63,12 @@ describe('search tests', () => {
       it('get the template', async () => {
         template = await app.tokenTemplate();
         const rules = Object.keys(template);
-        expect(rules).toContain('affiliateKey');
+        expect(rules).toContain('apiKey');
       });
-      it('affiliateKey', () => {
-        const affiliateKey = template.affiliateKey.regExp;
-        expect(affiliateKey.test('something')).toBeFalsy();
-        expect(affiliateKey.test('df2ce6e19ba4d3b749c88025d42a9a4e31cd2e9ac603ffd8acedeee615a76e42')).toBeTruthy();
+      it('apiKey', () => {
+        const apiKey = template.apiKey.regExp;
+        expect(apiKey.test('something')).toBeFalsy();
+        expect(apiKey.test('df2ce6e19ba4d3b749c88025d42a9a4e31cd2e9ac603ffd8acedeee615a76e42')).toBeTruthy();
       });
     });
   });
