@@ -11,7 +11,7 @@ const { translateAvailability } = require('./resolvers/availability');
 const { translateBooking } = require('./resolvers/booking');
 const { translateRate } = require('./resolvers/rate');
 
-const endpoint = 'https://api.zaui.io/octo';
+const endpoint = 'http://stage.zaui.io/octo';
 
 const CONCURRENCY = 3; // is this ok ?
 
@@ -24,11 +24,13 @@ const isNilOrEmpty = R.either(R.isNil, R.isEmpty);
 const getHeaders = ({
   apiKey,
   resellerId,
+  requestId,
 }) => ({
   Authorization: `Bearer ${apiKey}`,
   'Content-Type': 'application/json',
   'Octo-Capabilities': 'octo/pricing,octo/pickups,app/tourconnectai',
   ...resellerId ? { onBehalfOf_resellerId: resellerId } : {},
+  ...requestId ? { requestId } : {},
 });
 
 
@@ -88,10 +90,12 @@ class Plugin {
     token: {
       apiKey,
     },
+    requestId,
   }) {
     const url = `${endpoint || this.endpoint}/suppliers/`;
     const headers = getHeaders({
       apiKey,
+      requestId,
     });
     try {
       const suppliers = R.path(['data'], await this.axios({
@@ -115,6 +119,7 @@ class Plugin {
       productTypeDefs,
       productQuery,
     },
+    requestId,
   }) {
     let url = `${endpoint || this.endpoint}/suppliers/${supplierId}/products`;
     if (!isNilOrEmpty(payload)) {
@@ -124,6 +129,7 @@ class Plugin {
     }
     const headers = getHeaders({
       apiKey,
+      requestId,
     });
     let results = R.pathOr([], ['data'], await this.axios({
       method: 'get',
@@ -186,6 +192,7 @@ class Plugin {
       availTypeDefs,
       availQuery,
     },
+    requestId,
   }) {
     assert(this.jwtKey, 'JWT secret should be set');
     assert(
@@ -202,6 +209,7 @@ class Plugin {
     const localDateEnd = moment(endDate, dateFormat).format('YYYY-MM-DD');
     const headers = getHeaders({
       apiKey,
+      requestId,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/availability`;
     let availability = (
@@ -277,6 +285,7 @@ class Plugin {
       availTypeDefs,
       availQuery,
     },
+    requestId,
   }) {
     assert(this.jwtKey, 'JWT secret should be set');
     assert(
@@ -293,6 +302,7 @@ class Plugin {
     const localDateEnd = moment(endDate, dateFormat).format('YYYY-MM-DD');
     const headers = getHeaders({
       apiKey,
+      requestId,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/availability`;
     const availability = (
@@ -339,6 +349,7 @@ class Plugin {
       bookingTypeDefs,
       bookingQuery,
     },
+    requestId,
   }) {
     assert(availabilityKey, 'an availability code is required !');
     assert(R.path(['name'], holder), 'a holder\' first name is required');
@@ -346,6 +357,7 @@ class Plugin {
     const headers = getHeaders({
       apiKey,
       resellerId,
+      requestId,
     });
     const urlForCreateBooking = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings`;
     const dataFromAvailKey = await jwt.verify(availabilityKey, this.jwtKey);
@@ -400,10 +412,12 @@ class Plugin {
       bookingTypeDefs,
       bookingQuery,
     },
+    requestId,
   }) {
     assert(!isNilOrEmpty(bookingId) || !isNilOrEmpty(id), 'Invalid booking id');
     const headers = getHeaders({
       apiKey,
+      requestId,
     });
     const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings/${bookingId || id}/cancel`;
     const booking = R.path(['data'], await this.axios({
@@ -436,6 +450,7 @@ class Plugin {
       bookingTypeDefs,
       bookingQuery,
     },
+    requestId,
   }) {
     assert(
       !isNilOrEmpty(bookingId)
@@ -446,6 +461,7 @@ class Plugin {
     );
     const headers = getHeaders({
       apiKey,
+      requestId,
     });
     const searchByUrl = async url => {
       try {
