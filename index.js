@@ -11,7 +11,7 @@ const { translateAvailability } = require('./resolvers/availability');
 const { translateBooking } = require('./resolvers/booking');
 const { translateRate } = require('./resolvers/rate');
 
-const endpoint = 'http://stage.zaui.io/octo';
+const endpoint = 'https://api.zaui.io/octo';
 
 const CONCURRENCY = 3; // is this ok ?
 
