@@ -48,6 +48,10 @@ class Plugin {
         description: 'supplier Id in Zaui',
       },
     });
+    this.errorPathsAxiosErrors = () => [ // axios triggered errors
+      ['response', 'data', 'details']
+    ];
+    this.errorPathsAxiosAny = () => []; // 200's that should be errors
   }
 
   async validateToken({
