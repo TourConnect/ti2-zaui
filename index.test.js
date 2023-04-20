@@ -26,6 +26,7 @@ const typeDefsAndQueries = {
 };
 
 const app = new Plugin({
+  endpoint: process.env.ti2_zaui_endpoint,
   jwtKey: process.env.ti2_zaui_jwtKey,
 });
 const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
