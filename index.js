@@ -9,7 +9,7 @@ const { translateAvailability } = require('./resolvers/availability');
 const { translateBooking } = require('./resolvers/booking');
 const { translateRate } = require('./resolvers/rate');
 
-const endpoint = 'https://api.zaui.io/octo';
+const endpoint = null;
 
 const CONCURRENCY = 3; // is this ok ?
 
@@ -39,12 +39,12 @@ class Plugin {
       },
       resellerId: {
         type: 'text',
-        regExp: /^[0-9a-z]{4}$/,
-        description: 'the Reseller Id provided from Ventrata, should be in uuid format',
+        regExp: /^\d+$/,
+        description: 'the Reseller Id provided from Zaui, should be in uuid format',
       },
       supplierId: {
         type: 'text',
-        regExp: /^[0-9a-z]{3}$/,
+        regExp: /^\d+$/,
         description: 'supplier Id in Zaui',
       },
     });
