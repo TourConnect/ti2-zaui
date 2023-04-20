@@ -19,7 +19,7 @@ jobs:
       - run: npm run build --if-present
       - run: npm test
         env:
-          ti2_zaui_endpoint: 'https://api.zaui.io/api'
+          ti2_zaui_endpoint: 'https://api.zaui.io/octo'
           ti2_zaui_apiKey: ${{ secrets.ZAUI_APIKEY }}
           ti2_zaui_supplierId: '200'
           ti2_zaui_jwtKey: 'Reliance-Overload4-Lyrics'
