@@ -28,7 +28,6 @@ const getHeaders = ({
 
 class Plugin {
   constructor(params) { // we get the env variables from here
-    console.log(params);
     Object.entries(params).forEach(([attr, value]) => {
       this[attr] = value;
     });
@@ -91,7 +90,6 @@ class Plugin {
       productQuery,
     },
   }) {
-    console.log('searchProducts', this.endpoint, this.apiKey, this.jwtKey);
     let url = `${endpoint || this.endpoint}/suppliers/${supplierId}/products`;
     if (!isNilOrEmpty(payload)) {
       if (payload.productId) {
