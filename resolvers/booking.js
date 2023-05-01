@@ -16,20 +16,23 @@ const resolvers = {
   Query: {
     id: R.path(['id']),
     orderId: R.pathOr('', ['orderReference']),
-    bookingId: R.pathOr('', ['supplierReference']),
+    bookingId: R.pathOr('', ['id']),
     supplierBookingId: R.path(['supplierReference']),
     status: e => capitalize(R.path(['status'], e)),
     productId: R.path(['product', 'id']),
-    productName: R.path(['product', 'title']),
+    productName: R.path(['product', 'internalName']),
     cancellable: root => {
       if (root.status === 'CANCELLED') return false;
       return root.cancellable;
     },
-    editable: () => false,
+    editable: root => {
+      if (root.status === 'CANCELLED') return false;
+      return root.cancellable;
+    },
     unitItems: ({ unitItems = [] }) => unitItems.map(unitItem => ({
-      unitItemId: R.path(['uuid']),
-      unitId: R.path(['unitId']),
-      unitName: R.pathOr('', ['unit', 'title']),
+      unitItemId: R.path(['uuid'], unitItem),
+      unitId: R.path(['unitId'], unitItem),
+      unitName: R.pathOr('', ['unit', 'internalName'], unitItem),
     })),
     start: R.path(['availability', 'localDateTimeStart']),
     end: R.path(['availability', 'localDateTimeEnd']),

@@ -10,7 +10,6 @@ const { translateBooking } = require('./resolvers/booking');
 const { translateRate } = require('./resolvers/rate');
 
 const endpoint = null;
-
 const CONCURRENCY = 3; // is this ok ?
 
 const isNilOrEmpty = R.either(R.isNil, R.isEmpty);
@@ -311,6 +310,7 @@ class Plugin {
       notes,
       reference,
       settlementMethod,
+      rebookingId,
     },
     typeDefsAndQueries: {
       bookingTypeDefs,
@@ -324,18 +324,8 @@ class Plugin {
       apiKey: apiKey || this.apiKey,
       resellerId,
     });
-    const urlForCreateBooking = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings`;
+    const urlForCreateBooking = `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings${rebookingId ? `/${rebookingId}` : ''}`;
     const dataFromAvailKey = await jwt.verify(availabilityKey, this.jwtKey);
-    let booking = R.path(['data'], await axios({
-      method: 'post',
-      url: urlForCreateBooking,
-      data: {
-        settlementMethod, 
-        ...dataFromAvailKey,
-        notes,
-      },
-      headers,
-    }));
     const dataForConfirmBooking = {
       contact: {
         fullName: `${holder.name} ${holder.surname}`,
@@ -345,15 +335,28 @@ class Plugin {
         country: R.pathOr('', ['country'], holder),
       },
       notes,
-      resellerReference: reference,
+      resellerReference: resellerId ? reference : 'PLACEHOLDER',
       settlementMethod,
     };
-    booking = R.path(['data'], await axios({
-      method: 'post',
-      url: `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings/${booking.uuid}/confirm`,
-      data: dataForConfirmBooking,
+    let booking = R.path(['data'], await axios({
+      method: rebookingId ? 'patch' : 'post',
+      url: urlForCreateBooking,
+      data: {
+        settlementMethod, 
+        ...dataFromAvailKey,
+        notes,
+        ...(rebookingId ? dataForConfirmBooking : {})
+      },
       headers,
     }));
+    if (!rebookingId) {
+      booking = R.path(['data'], await axios({
+        method: 'post',
+        url: `${endpoint || this.endpoint}/suppliers/${supplierId}/bookings/${booking.uuid}/confirm`,
+        data: dataForConfirmBooking,
+        headers,
+      }));
+    }
     return ({
       booking: await translateBooking({
         rootValue: booking,
