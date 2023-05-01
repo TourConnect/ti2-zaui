@@ -168,7 +168,7 @@ describe('search tests', () => {
       availabilityKey = R.path([0, 0, 'key'], availability);
       expect(availabilityKey).toBeTruthy();
     });
-    let booking;
+    let booking = require('./__fixtures__/booking.js');
     const reference = faker.datatype.uuid();
     it('should be able to create a booking', async () => {
       const fullName = faker.name.findName().split(' ');
