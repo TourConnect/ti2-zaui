@@ -195,13 +195,14 @@ class Plugin {
           url,
           data: R.omit(['units'], data),
           headers,
-        }));
+        })).filter(avail => avail.vacancies);
         const availWithUnits = R.path(['data'], await axios({
           method: 'post',
           url,
           data,
           headers,
-        }));
+        })).filter(avail => avail.vacancies);
+        console.log({ availWithUnits, availWithoutUnits });
         return availWithUnits.map(avail => {
           const foundMatch = availWithoutUnits.find(a => a.id === avail.id);
           if (!foundMatch) return avail;
@@ -214,7 +215,7 @@ class Plugin {
     );
     availability = await Promise.map(availability,
       (avails, ix) => {
-        return Promise.map(avails.filter(avail => avail.vacancies),
+        return Promise.map(avails,
           avail => translateAvailability({
             typeDefs: availTypeDefs,
             query: availQuery,

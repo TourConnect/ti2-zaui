@@ -14,7 +14,7 @@ const resolvers = {
         jwtKey,
       } = args;
       if (!jwtKey) return null;
-      if (root.status !== 'AVAILABLE' && root.status !== 'FREESALE') return null;
+      if (root.status !== 'AVAILABLE' && root.status !== 'FREESALE' && root.status !== 'LIMITED') return null;
       return jwt.sign(({
         productId,
         optionId,
