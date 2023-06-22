@@ -214,7 +214,7 @@ class Plugin {
     );
     availability = await Promise.map(availability,
       (avails, ix) => {
-        return Promise.map(avails,
+        return Promise.map(avails.filter(avail => avail.vacancies),
           avail => translateAvailability({
             typeDefs: availTypeDefs,
             query: availQuery,
@@ -287,7 +287,7 @@ class Plugin {
           data,
           headers,
         });
-        return Promise.map(result.data, avail => translateAvailability({
+        return Promise.map(result.data.filter(avail => avail.vacancies), avail => translateAvailability({
           rootValue: avail,
           typeDefs: availTypeDefs,
           query: availQuery,
