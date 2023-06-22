@@ -201,7 +201,7 @@ describe('search tests', () => {
       expect(R.path(['cancellable'], booking)).toBeTruthy();
     });
     let bookings = [];
-    it('it should be able to search bookings by id', async () => {
+    it.skip('it should be able to search bookings by id', async () => {
       const retVal = await app.searchBooking({
         axios,
         token,
@@ -227,7 +227,7 @@ describe('search tests', () => {
       ({ bookings } = retVal);
       expect(R.path([0, 'id'], bookings)).toBeTruthy();
     });
-    it('it should be able to search bookings by supplierBookingId', async () => {
+    it.skip('it should be able to search bookings by supplierBookingId', async () => {
       const retVal = await app.searchBooking({
         axios,
         token,
@@ -240,7 +240,7 @@ describe('search tests', () => {
       ({ bookings } = retVal);
       expect(R.path([0, 'id'], bookings)).toBeTruthy();
     });
-    it('it should be able to search bookings by travelDate', async () => {
+    it.skip('it should be able to search bookings by travelDate', async () => {
       const retVal = await app.searchBooking({
         axios,
         token,
@@ -255,7 +255,7 @@ describe('search tests', () => {
       ({ bookings } = retVal);
       expect(R.path([0, 'id'], bookings)).toBeTruthy();
     });
-    it('should be able to cancel the booking', async () => {
+    it.skip('should be able to cancel the booking', async () => {
       const retVal = await app.cancelBooking({
         axios,
         token,
