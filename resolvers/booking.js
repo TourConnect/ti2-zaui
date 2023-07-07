@@ -62,7 +62,11 @@ const resolvers = {
     resellerReference: R.propOr('', 'resellerReference'),
     // TODO
     publicUrl: R.prop('confirmation_url'),
-    privateUrl: R.prop('dashboard_url'),
+    privateUrl: root => {
+      if (root.supplierShortName) {
+        return `https://${root.supplierShortName}.zaui.net/modules/tours/tourItinerary.php?bookingid=${root.id}`
+      }
+    },
     pickupRequested: R.prop('pickupRequested'),
     pickupPointId: R.prop('pickupPointId'),
     pickupPoint: root => {

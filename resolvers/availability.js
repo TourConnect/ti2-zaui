@@ -31,7 +31,7 @@ const resolvers = {
     dateTimeEnd: root => R.path(['localDateTimeEnd'], root),
     allDay: R.path(['allDay']),
     vacancies: R.prop('vacancies'),
-    available: avail => Boolean(avail.status === 'AVAILABLE' || avail.status === 'FREESALE'),
+    available: avail => Boolean(avail.status === 'AVAILABLE' || avail.status === 'FREESALE' || avail.status === 'LIMITED'),
     // get the starting price
     pricing: root => R.path(['pricing'], root) || R.path(['pricingFrom'], root),
     unitPricing: root => R.path(['unitPricing'], root) || R.path(['unitPricingFrom'], root),

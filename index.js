@@ -41,6 +41,11 @@ class Plugin {
         regExp: /^\d+$/,
         description: 'the Reseller Id provided from Zaui, should be in uuid format',
       },
+      supplierShortName: {
+        type: 'text',
+        regExp: /^\d+$/,
+        description: 'company short name in Zaui',
+      },
       supplierId: {
         type: 'text',
         regExp: /^\d+$/,
@@ -202,7 +207,6 @@ class Plugin {
           data,
           headers,
         })).filter(avail => avail.vacancies);
-        console.log({ availWithUnits, availWithoutUnits });
         return availWithUnits.map(avail => {
           const foundMatch = availWithoutUnits.find(a => a.id === avail.id);
           if (!foundMatch) return avail;
@@ -304,6 +308,7 @@ class Plugin {
       apiKey,
       supplierId,
       resellerId,
+      supplierShortName,
     },
     payload: {
       availabilityKey,
@@ -331,7 +336,7 @@ class Plugin {
       contact: {
         fullName: `${holder.name} ${holder.surname}`,
         emailAddress: R.path(['emailAddress'], holder),
-        phoneNumber: R.pathOr('', ['phoneNumber'], holder),
+        phoneNumber: R.pathOr('', ['phone'], holder),
         locales: R.pathOr(null, ['locales'], holder),
         country: R.pathOr('', ['country'], holder),
       },
@@ -360,7 +365,7 @@ class Plugin {
     }
     return ({
       booking: await translateBooking({
-        rootValue: booking,
+        rootValue: { ...booking, supplierShortName },
         typeDefs: bookingTypeDefs,
         query: bookingQuery,
       })
@@ -372,6 +377,7 @@ class Plugin {
     token: {
       apiKey,
       supplierId,
+      supplierShortName,
     },
     payload: {
       bookingId,
@@ -396,7 +402,7 @@ class Plugin {
     }));
     return ({
       cancellation: await translateBooking({
-        rootValue: booking,
+        rootValue: { ...booking, supplierShortName },
         typeDefs: bookingTypeDefs,
         query: bookingQuery,
       })
@@ -408,6 +414,7 @@ class Plugin {
     token: {
       apiKey,
       supplierId,
+      supplierShortName,
     },
     payload: {
       bookingId,
@@ -465,7 +472,7 @@ class Plugin {
     return ({
       bookings: await Promise.map(R.unnest(bookings), async booking => {
         return translateBooking({
-          rootValue: booking,
+          rootValue: { ...booking, supplierShortName },
           typeDefs: bookingTypeDefs,
           query: bookingQuery,
         });
