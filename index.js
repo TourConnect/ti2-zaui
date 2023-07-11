@@ -43,7 +43,7 @@ class Plugin {
       },
       supplierShortName: {
         type: 'text',
-        regExp: /^\d+$/,
+        regExp: /^\w+$/,
         description: 'company short name in Zaui',
       },
       supplierId: {
