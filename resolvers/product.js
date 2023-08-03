@@ -2,6 +2,15 @@ const { makeExecutableSchema } = require('@graphql-tools/schema');
 const R = require('ramda');
 const { graphql } = require('graphql');
 
+
+function extractAndSortNumbers(str) {
+  const regex = /\d+/g;
+  const matches = str.match(regex);
+  if (!matches) return null;
+
+  return matches.map(Number).sort((a, b) => a - b);
+}
+
 const resolvers = {
   Query: {
     productId: R.path(['id']),
@@ -29,7 +38,20 @@ const resolvers = {
       currencyPrecision: R.path(['currencyPrecision'], p),
       currency: R.path(['currency'], p),
     })),
-    restrictions: R.propOr({}, 'restrictions'),
+    restrictions: root => {
+      if (!root.restrictions) return {};
+      if (root.restrictions.minAge === 0 && root.restrictions.maxAge === 99) {
+        if (root.reference && extractAndSortNumbers(root.reference)) {
+          const [minAge, maxAge] = extractAndSortNumbers(root.reference);
+          return {
+            ...root.restrictions,
+            minAge: minAge || 0,
+            maxAge: maxAge || 99,
+          }
+        }
+      }
+      return root.restrictions;
+    },
   },
 };
 

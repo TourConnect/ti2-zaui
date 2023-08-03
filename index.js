@@ -63,20 +63,20 @@ class Plugin {
     axios,
     token: {
       apiKey,
+      supplierId,
     },
   }) {
-    const url = `${endpoint || this.endpoint}/suppliers/`;
+    const url = `${endpoint || this.endpoint}/suppliers/${supplierId}/products`;
     const headers = getHeaders({
       apiKey: apiKey || this.apiKey,
     });
     try {
-      const suppliers = R.path(['data'], await axios({
+      const products = R.path(['data'], await axios({
         method: 'get',
         url,
         headers,
       }));
-      if (suppliers.id) return true;
-      return Array.isArray(suppliers) && suppliers.length > 0;
+      return Array.isArray(products) && products.length > 0;
     } catch (err) {
       return false;
     }
