@@ -20,7 +20,9 @@ const getHeaders = ({
 }) => ({
   Authorization: `Bearer ${apiKey}`,
   'Content-Type': 'application/json',
-  'Octo-Capabilities': 'octo/pricing,octo/pickups,app/tourconnectai',
+  'Octo-Capabilities': resellerId
+    ? 'octo/pricing,octo/pickups,app/tourconnectai'
+    : 'octo/pricing,octo/pickups',
   ...resellerId ? { onBehalfOf_resellerId: resellerId } : {},
 });
 
