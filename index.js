@@ -159,7 +159,6 @@ class Plugin {
       optionIds,
       units,
       startDate,
-      endDate,
       dateFormat,
       currency,
     },
@@ -180,7 +179,7 @@ class Plugin {
     assert(productIds.every(Boolean), 'some invalid productId(s)');
     assert(optionIds.every(Boolean), 'some invalid optionId(s)');
     const localDateStart = moment(startDate, dateFormat).format('YYYY-MM-DD');
-    const localDateEnd = moment(endDate, dateFormat).format('YYYY-MM-DD');
+    const localDateEnd = moment(startDate, dateFormat).format('YYYY-MM-DD');
     const headers = getHeaders({
       apiKey: apiKey || this.apiKey,
     });
@@ -251,7 +250,6 @@ class Plugin {
       optionIds,
       units,
       startDate,
-      endDate,
       currency,
       dateFormat,
     },
@@ -272,7 +270,7 @@ class Plugin {
     assert(productIds.every(Boolean), 'some invalid productId(s)');
     assert(optionIds.every(Boolean), 'some invalid optionId(s)');
     const localDateStart = moment(startDate, dateFormat).format('YYYY-MM-DD');
-    const localDateEnd = moment(endDate, dateFormat).format('YYYY-MM-DD');
+    const localDateEnd = moment(startDate, dateFormat).format('YYYY-MM-DD');
     const headers = getHeaders({
       apiKey: apiKey || this.apiKey,
     });
