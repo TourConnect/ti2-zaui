@@ -29,7 +29,17 @@ const resolvers = {
   },
   Unit: {
     unitId: R.path(['id']),
-    unitName: R.pathOr('', ['internalName']),
+    unitName: root =>  {
+      // user (prince of whales) prefer to use "reference" instead of "internalName"
+      // because internalName is "STUDENT", and they prefer to use "Youth"
+      if (root.reference) {
+        if (root.reference.includes('(')) {
+          return root.reference.split('(')[0].trim();
+        }
+        return root.reference;
+      }
+      return R.pathOr('', ['internalName'], root);
+    },
     subtitle: R.pathOr('', ['note']),
     type: R.prop('type'),
     pricing: root => R.propOr([], 'pricingFrom', root).map(p => ({
