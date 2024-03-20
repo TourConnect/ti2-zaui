@@ -32,7 +32,18 @@ const resolvers = {
     unitItems: ({ unitItems = [] }) => unitItems.map(unitItem => ({
       unitItemId: R.path(['uuid'], unitItem),
       unitId: R.path(['unitId'], unitItem),
-      unitName: R.pathOr('', ['unit', 'internalName'], unitItem),
+      unitName: (() =>  {
+        // user (prince of whales) prefer to use "reference" instead of "internalName"
+        // because internalName is "STUDENT", and they prefer to use "Youth"
+        if (R.pathOr('', ['unit', 'reference'], unitItem)) {
+          const reference = R.pathOr('', ['unit', 'reference'], unitItem);
+          if (reference.includes('(')) {
+            return reference.split('(')[0].trim();
+          }
+          return reference;
+        }
+        return R.pathOr('', ['unit', 'internalName'], unitItem);
+      })(),
     })),
     start: R.path(['availability', 'localDateTimeStart']),
     end: R.path(['availability', 'localDateTimeEnd']),
