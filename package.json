@@ -1,6 +1,6 @@
 {
   "name": "ti2-zaui",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Zaui's TI2 Plugin",
   "main": "index.js",
   "scripts": {
