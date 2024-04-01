@@ -45,9 +45,9 @@ const resolvers = {
   },
   Pricing: {
     unitId: R.prop('unitId'),
-    original: R.prop('total'),
-    retail: R.prop('total'),
-    net: R.prop('total'),
+    original: R.prop('original'),
+    retail: R.prop('retail'),
+    net: R.prop('net'),
     currencyPrecision: R.prop('currencyPrecision'),
   },
 };

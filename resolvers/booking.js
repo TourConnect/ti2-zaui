@@ -58,8 +58,8 @@ const resolvers = {
     }),
     notes: R.pathOr('', ['notes']),
     price: root => ({
-      original: R.path(['pricing', 'total'], root),
-      retail: R.path(['pricing', 'total'], root),
+      original: R.path(['pricing', 'original'], root),
+      retail: R.path(['pricing', 'retail'], root),
       currencyPrecision: R.path(['pricing', 'currencyPrecision'], root),
       currency: R.path(['pricing', 'currency'], root),
     }),

@@ -43,8 +43,8 @@ const resolvers = {
     subtitle: R.pathOr('', ['note']),
     type: R.prop('type'),
     pricing: root => R.propOr([], 'pricingFrom', root).map(p => ({
-      original: R.path(['subtotal'], p),
-      retail: R.path(['subtotal'], p),
+      original: R.path(['original'], p),
+      retail: R.path(['retail'], p),
       currencyPrecision: R.path(['currencyPrecision'], p),
       currency: R.path(['currency'], p),
     })),
